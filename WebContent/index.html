@@ -2,47 +2,119 @@
                     "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-  <script src="offline/jquery-latest.js"></script>
-  <link rel="stylesheet" href="offline/qunit.css" type="text/css" media="screen" />
+<script src="offline/jquery-latest.js"></script>
+<link rel="stylesheet" href="offline/qunit.css" type="text/css"
+	media="screen" />
 <script type="text/javascript" src="offline/qunit.js"></script>
 
-  <script>
-  $(document).ready(function(){
-    
-test("a basic test example", function() {
-  ok( true, "this test is fine" );
-  var value = "hello";
-  equal( value, "hello", "We expect value to be hello" );
-});
+<script>
+	Game = function() {
+		this.fields = Array(9, false);
+	}
+	Game.prototype = {
+		take : function(field) {
+			this.fields[field-1] = true;
+		},
+		isFinished : function() {
+			var all = this.fields.every(function (field){
+				return field ;
+			});
 
-module("Module A");
+			var line = this.fields[0] && this.fields[1] && this.fields[2];
+			
+			var colonne = this.fields[0] && this.fields[3] && this.fields[6]; 
+				
+			return all || line || colonne;
+		},
+		currentPlayer : function() {
+			return "X";
+		}
+	}
 
-test("first test within module", function() {
-  ok( true, "all pass" );
-});
+	$(document)
+			.ready(
+					function() {
+						module("3. Colonne");
+						test(
+								"Le jeu est fini si 3 cases en colonne sont prises",
+								function() {
+									game = new Game();
+									game.take(1);
+									game.take(4);
+									game.take(7);
+									ok(game.isFinished(),
+									"quand je prends 3 cases en colonne alignées, le jeu est fini.");
+								});
+						module("2. Ligne");
+						test(
+								"Le jeu n'est pas fini si 3 cases non alignées sont prises",
+								function() {
+									game = new Game();
+									game.take(1);
+									game.take(5);
+									game.take(3);
+									ok(!game.isFinished(),
+									"quand je prends 3 cases non alignées, le jeu n'est pas fini.");
+								});
+						test(
+								"Le jeu fait jouer un joueur.",
+								function() {
+									game = new Game();
+									equals(game.currentPlayer(), "X", "Le joueur qui commence est X.");
+								});
+						test(
+								"Le jeu est fini quand toutes les cases d'une même ligne sont prises",
+								function() {
+									game = new Game();
+									game.take(1);
+									game.take(2);
+									game.take(3);
+									ok(game.isFinished(),
+									"quand je prends 3 cases en ligne, le jeu est fini.");
+								});
+						module("1. Fin");
+						test(
+								"Le jeu est terminé si toutes les cases sont prises",
+								function() {
+									game = new Game();
+									game.take(1);
+									game.take(2);
+									game.take(3);
+									game.take(4);
+									game.take(5);
+									game.take(6);
+									game.take(7);
+									game.take(8);
+									game.take(9);
+									ok(game.isFinished(),
+											"quand je prends toutes les cases, ça doit être fini.");
+								});
+						test(
+								"Le jeu n'est pas terminé si aucune case n'est prise",
+								function() {
+									game = new Game();
+									ok(!game.isFinished(),
+											"quand je prends aucune case, ça doit pas être fini.");
+								});
+						test(
+								"Le jeu n'est pas terminé si 1 case est prise",
+								function() {
+									game = new Game();
+									game.take(3);
+									ok(!game.isFinished(),
+											"quand je prends une case, ça doit pas être fini.");
+								});
 
-test("second test within module", function() {
-  ok( true, "all pass" );
-});
+					});
+</script>
 
-module("Module B");
-
-test("some other test", function() {
-  expect(2);
-  equal( true, false, "failing test" );
-  equal( true, true, "passing test" );
-});
-
-  });
-  </script>
-  
 </head>
 <body>
-  <h1 id="qunit-header">QUnit example</h1>
- <h2 id="qunit-banner"></h2>
- <div id="qunit-testrunner-toolbar"></div>
- <h2 id="qunit-userAgent"></h2>
- <ol id="qunit-tests"></ol>
- <div id="qunit-fixture">test markup, will be hidden</div>
+	<h1 id="qunit-header">QUnit example</h1>
+	<h2 id="qunit-banner"></h2>
+	<div id="qunit-testrunner-toolbar"></div>
+	<h2 id="qunit-userAgent"></h2>
+	<ol id="qunit-tests"></ol>
+	<div id="qunit-fixture">test markup, will be hidden</div>
 </body>
 </html>
