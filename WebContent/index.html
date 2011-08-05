@@ -2,283 +2,47 @@
                     "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-<script src="http://code.jquery.com/jquery-latest.js"></script>
-<link rel="stylesheet" href="http://code.jquery.com/qunit/git/qunit.css" type="text/css" media="screen" />
+  <script src="http://code.jquery.com/jquery-latest.js"></script>
+  <link rel="stylesheet" href="http://code.jquery.com/qunit/git/qunit.css" type="text/css" media="screen" />
 <script type="text/javascript" src="http://code.jquery.com/qunit/git/qunit.js"></script>
 
-<script>
-	var Game = function() {
-		this.currentPlayerId = "currentPlayer";
-		this.getCurrentPlayer = function() {
-			return $("#" + this.currentPlayerId).text();
-		}
-		this.setCurrentPlayer = function(playerMark) {
-			$("#" + this.currentPlayerId).text(playerMark);
-		}
-		this.setMessage = function(message) {
-			$("#message").text(message);
-		}
-		this.take = function(field) {
-			if ($("#message").text() == "" && $("#" + field).text() == ".") {
-				$("#" + field).text(this.getCurrentPlayer());
-				this.switchPlayers();
-				this.isOver();
-			}
-		}
-		this.switchPlayers = function() {
-			if ("X" == this.getCurrentPlayer()) {
-				this.setCurrentPlayer("O");
-			} else {
-				this.setCurrentPlayer("X");
-			}
-		}
-		this.isOver = function() {
-			firstLineTaken = $("#1").text() != "."
-					&& $("#1").text() == $("#2").text()
-					&& $("#2").text() == $("#3").text();
-			secondLineTaken = $("#4").text() != "."
-					&& $("#4").text() == $("#5").text()
-					&& $("#5").text() == $("#6").text();
-			thirdLineTaken = $("#7").text() != "."
-					&& $("#7").text() == $("#8").text()
-					&& $("#8").text() == $("#9").text();
-			firstColumnTaken = $("#1").text() != "."
-					&& $("#1").text() == $("#4").text()
-					&& $("#4").text() == $("#7").text();
-			secondColumnTaken = $("#2").text() != "."
-					&& $("#2").text() == $("#5").text()
-					&& $("#5").text() == $("#8").text();
-			thirdColumnTaken = $("#3").text() != "."
-					&& $("#3").text() == $("#6").text()
-					&& $("#6").text() == $("#9").text();
-			diagonalOneTaken = $("#1").text() != "."
-					&& $("#1").text() == $("#5").text()
-					&& $("#5").text() == $("#9").text();
-			diagonalTwoTaken = $("#3").text() != "."
-					&& $("#3").text() == $("#5").text()
-					&& $("#5").text() == $("#7").text();
-			if (firstLineTaken || secondLineTaken || thirdLineTaken
-					|| firstColumnTaken || secondColumnTaken
-					|| thirdColumnTaken || diagonalOneTaken || diagonalTwoTaken) {
-				this.switchPlayers();
-				this.setMessage(this.getCurrentPlayer() + " won");
-				return;
-			}
-			var allFieldsAreTaken = true;
-			$("#grid td").each(
-					function() {
-						allFieldsAreTaken = allFieldsAreTaken
-								&& ($(this).text() != ".");
-					});
-			if (allFieldsAreTaken) {
-				this.setMessage("Game over");
-			}
-		}
-		this.reset = function() {
-			$("#grid td").each(function() {
-				$(this).text(".");
-			});
-			this.setCurrentPlayer("X");
-			this.setMessage("");
-		}
-	}
-	prod = function() {
-		game = new Game("currentPlayer");
-		$("#grid td").each(function() {
-			$(this).click(function() {
-				game.take($(this).attr("id"));
-			});
-		});
-	}
-	tests = function() {
-		module("With reset the grid", {
-			setup : function() {
-				game.reset();
-			}
-		});
-		test("A field can be taken", function() {
-			expect(1);
-			game.take(1);
-			equals("X", $("#1").text(), "Field 1 should have been taken.");
-		});
-		test("A non-blank field can't be taken",
-				function() {
-					expect(1);
-					game.take(1);
-					game.take("O", 1);
-					equals("X", $("#1").text(),
-							"Field 1 should have been taken by X.");
-				});
-		test("The game can be reset", function() {
-			expect(3);
-			game.take(1);
-			game.reset();
-			equals(".", $("#1").text(), "Field 1 should have been reset.");
-			equals(0, $("#message").text().length,
-					"Message should have been reset.");
-			equals("X", $("#currentPlayer").text(),
-					"Current player should have been reset.");
-		});
-		test("The game is over when all fields are taken", function() {
-			expect(1);
-			game.take(1);
-			game.take(3);
-			game.take(2);
-			game.take(4);
-			game.take(6);
-			game.take(5);
-			game.take(7);
-			game.take(8);
-			game.take(9);
-			equals($("#message").text(), "Game over",
-					"The game should be over when all fields are taken.");
-		});
-		test("Players are taking fields alternatively", function() {
-			expect(2);
-			equals("X", $("#currentPlayer").text(),
-					"Initially, the current player is X.");
-			game.take(1);
-			equals("O", $("#currentPlayer").text(),
-					"The current player should now be O.");
-		});
-		test("The game is won by O if the first line is taken by O.",
-				function() {
-					expect(1);
-					game.take(9);
-					game.take(1);
-					game.take(5);
-					game.take(2);
-					game.take(7);
-					game.take(3);
-					equals("O won", $("#message").text(),
-							"The game should be won by player O.");
-				});
-		test("The game is won by X if the second line is taken by X.",
-				function() {
-					expect(1);
-					game.take(4);
-					game.take(1);
-					game.take(5);
-					game.take(2);
-					game.take(6);
-					equals("X won", $("#message").text(),
-							"The game should be won by player X.");
-				});
-		test("The game is won by O if the third line is taken by O.",
-				function() {
-					expect(1);
-					game.take(1);
-					game.take(7);
-					game.take(5);
-					game.take(8);
-					game.take(3);
-					game.take(9);
-					equals("O won", $("#message").text(),
-							"The game should be won by player O.");
-				});
-		test("The game is won by X if the first column is taken by X.",
-				function() {
-					expect(1);
-					game.take(1);
-					game.take(2);
-					game.take(4);
-					game.take(5);
-					game.take(7);
-					equals("X won", $("#message").text(),
-							"The game should be won by player X.");
-				});
-		test("The game is won by O if the second column is taken by O.",
-				function() {
-					expect(1);
-					game.take(1);
-					game.take(2);
-					game.take(4);
-					game.take(5);
-					game.take(9);
-					game.take(8);
-					equals("O won", $("#message").text(),
-							"The game should be won by player O.");
-				});
-		test("The game is won by X if the third column is taken by X.",
-				function() {
-					expect(1);
-					game.take(3);
-					game.take(2);
-					game.take(6);
-					game.take(5);
-					game.take(9);
-					equals("X won", $("#message").text(),
-							"The game should be won by player X.");
-				});
-		test("The game is won by X if first diagonal is taken by X.",
-				function() {
-					expect(1);
-					game.take(1);
-					game.take(2);
-					game.take(5);
-					game.take(3);
-					game.take(9);
-					equals("X won", $("#message").text(),
-							"The game should be won by player X.");
-				});
-		test("The game is won by O if second diagonal is taken by O.",
-				function() {
-					expect(1);
-					game.take(1);
-					game.take(3);
-					game.take(4);
-					game.take(5);
-					game.take(9);
-					game.take(7);
-					equals("O won", $("#message").text(),
-							"The game should be won by player O.");
-				});
-	}
-	$(document).ready(prod);
-	$(document).ready(tests);
-</script>
-<style>
-#grid td {
-	width: 1em;
-	height: 1em;
-	text-align: center;
-	border: 1px solid black;
-}
-</style>
+  <script>
+  $(document).ready(function(){
+    
+test("a basic test example", function() {
+  ok( true, "this test is fine" );
+  var value = "hello";
+  equal( value, "hello", "We expect value to be hello" );
+});
+
+module("Module A");
+
+test("first test within module", function() {
+  ok( true, "all pass" );
+});
+
+test("second test within module", function() {
+  ok( true, "all pass" );
+});
+
+module("Module B");
+
+test("some other test", function() {
+  expect(2);
+  equal( true, false, "failing test" );
+  equal( true, true, "passing test" );
+});
+
+  });
+  </script>
+  
 </head>
 <body>
-	<div id="info">
-		<p>
-			Current Player: <span id="currentPlayer">X</span>
-		</p>
-		<p>The grid:</p>
-		<div id="grid">
-			<table>
-				<tr>
-					<td id="1">.</td>
-					<td id="2">.</td>
-					<td id="3">.</td>
-				</tr>
-				<tr>
-					<td id="4">.</td>
-					<td id="5">.</td>
-					<td id="6">.</td>
-				</tr>
-				<tr>
-					<td id="7">.</td>
-					<td id="8">.</td>
-					<td id="9">.</td>
-				</tr>
-			</table>
-		</div>
-		<p id="message"></p>
-		<button id="resetButton" onclick="game.reset()">reset</button>
-	</div>
-	<h1 id="qunit-header">QUnit example</h1>
-	<h2 id="qunit-banner"></h2>
-	<div id="qunit-testrunner-toolbar"></div>
-	<h2 id="qunit-userAgent"></h2>
-	<ol id="qunit-tests"></ol>
-	<div id="qunit-fixture">test markup, will be hidden</div>
+  <h1 id="qunit-header">QUnit example</h1>
+ <h2 id="qunit-banner"></h2>
+ <div id="qunit-testrunner-toolbar"></div>
+ <h2 id="qunit-userAgent"></h2>
+ <ol id="qunit-tests"></ol>
+ <div id="qunit-fixture">test markup, will be hidden</div>
 </body>
 </html>
