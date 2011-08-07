@@ -2,47 +2,171 @@
                     "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-  <script src="offline/jquery-latest.js"></script>
-  <link rel="stylesheet" href="offline/qunit.css" type="text/css" media="screen" />
+<script src="offline/jquery-latest.js"></script>
+<link rel="stylesheet" href="offline/qunit.css" type="text/css"
+	media="screen" />
 <script type="text/javascript" src="offline/qunit.js"></script>
+<script>
+	Game = function() {
+		this.fields = Array("", "", "", "", "", "", "", "", "");
+		this.currentPlayer = "X";
+		this.gameOver = false;
+		this.winner = "";
+		this.take = function(field) {
+			if (this.fields[field - 1] == "") {
+				this.fields[field - 1] = this.currentPlayer;
+				if (this.isAllFieldsTaken()) {
+					this.gameOver = true;
+				} else {
+					this.gameOver = this.isADiagonalIsTaken() || this.isALineIsTaken()
+						|| this.isAColumnIsTaken();
+					if (this.gameOver) {
+						this.winner = this.currentPlayer;
+					}
+				}
+				this.currentPlayer = (this.currentPlayer == "X" ? "O" : "X");
+			}
+		};
+		this.isTaken = function(a1, a2, a3) {
+			return (this.currentPlayer == this.fields[a1])
+				&& (this.currentPlayer == this.fields[a2])
+				&& (this.currentPlayer == this.fields[a3]);
+		}
+		this.isADiagonalIsTaken = function() {
+			diagonal_nw_se = this.isTaken(0, 4, 8);
+			diagonal_ne_sw = this.isTaken(2, 4, 6); 
+			return diagonal_nw_se || diagonal_ne_sw;
+		};
+		this.isAColumnIsTaken = function() {
+			firstColumn = this.isTaken(0, 3, 6);
+			secondColumn = this.isTaken(1, 4, 7);
+			thirdColumn = this.isTaken(2, 5, 8); 
+			return firstColumn || secondColumn || thirdColumn;
+		};
+		this.isALineIsTaken = function() {
+			firstLine = this.isTaken(0, 1, 2);
+			secondLine = this.isTaken(3, 4, 5);
+			thirdLine = this.isTaken(6, 7, 8); 
+			return firstLine || secondLine || thirdLine;
+		}
+		this.isOver = function() {
+			return this.gameOver;
+		};
+		this.isAllFieldsTaken = function() {
+			currentField = 0;
+			while (this.fields[currentField] != "" && currentField < 9) {
+				currentField++;
+			}
+			return currentField == 9;
+		};
+		this.getCurrentPlayer = function() {
+			return this.currentPlayer;
+		};
+		this.getWinner = function() {
+			return this.winner;
+		}
+	};
+	
+	$(document).ready(function() {
+		module("rule 3");
+		test("A game can be won by a player if he takes a column", function() {
+			game = new Game();
+			game.take(3);
+			game.take(4);
+			game.take(6);
+			game.take(5);
+			game.take(9);
+			ok(game.isOver(), "game must be over since a column has been taken by X");
+			equals(game.getWinner(), "X", "X should have won the game.");
+		});
+		module("rule 2");
+		test("A game can be won by a player if he takes a line", function() {
+			game = new Game();
+			game.take(1);
+			game.take(4);
+			game.take(2);
+			game.take(5);
+			game.take(3);
+			ok(game.isOver(), "game must be over since a line has been taken by X");
+			equals(game.getWinner(), "X", "X should have won the game.");
+		});
+		module("rule 4");
+		test("A game is won by a player if he takes one diagonal", function() {
+			game = new Game();
+			game.take(1);
+			game.take(2);
+			game.take(5);
+			game.take(3);
+			game.take(9);
+			ok(game.isOver(), "game must be over");
+			equals(game.getWinner(), "X");
+		});
+		test("A game is won by a player if he takes another diagonal", function() {
+			game = new Game();
+			game.take(1);
+			game.take(3);
+			game.take(2);
+			game.take(5);
+			game.take(4);
+			game.take(7);
+			ok(game.isOver(), "game must be over");
+			equals(game.getWinner(), "O");
+		});
+		module("rule 6");
+		test("Players plays alternatively", function() {
+			game = new Game();
+			equals(game.getCurrentPlayer(), "X");
+			game.take(1);
+			equals(game.getCurrentPlayer(), "O");
+			game.take(2);
+			equals(game.getCurrentPlayer(), "X");
+		});
+		test("Players plays alternatively until the game is over", function() {
+			game = new Game();
+			game.take(2);
+			game.take(1);
+			game.take(4);
+			game.take(3);
+			game.take(6);
+			game.take(5);
+			game.take(7);
+			game.take(8);
+			game.take(9);
+			ok(game.isOver(), "Expecting a game over.");
+			equals(game.getWinner(), "", "No winner.");
+		});
+		module("rule 5");
+		test("The current player is X.", function() {
+			game = new Game();
+			equals(game.getCurrentPlayer(), "X");
+		});
+		test("A filled field cannot be taken twice by a player", function() {
+			game = new Game();
+			game.take(1);
+			equals(game.getCurrentPlayer(), "O");
+			game.take(1);
+			equals(game.getCurrentPlayer(), "O");
+		});
+	    module("rule 1");
+		test("Not Game Over if one field is taken", function() {
+			game = new Game();
+			game.take(1);
+			ok(!game.isOver(), "The game should not be over when one field is taken");
+		});
+		test("Not Game Over if none fields are taken", function() {
+			game = new Game();
+			ok(!game.isOver(), "The game should not be over when none of the fields are taken");
+		});
+	});
+</script>
 
-  <script>
-  $(document).ready(function(){
-    
-test("a basic test example", function() {
-  ok( true, "this test is fine" );
-  var value = "hello";
-  equal( value, "hello", "We expect value to be hello" );
-});
-
-module("Module A");
-
-test("first test within module", function() {
-  ok( true, "all pass" );
-});
-
-test("second test within module", function() {
-  ok( true, "all pass" );
-});
-
-module("Module B");
-
-test("some other test", function() {
-  expect(2);
-  equal( true, false, "failing test" );
-  equal( true, true, "passing test" );
-});
-
-  });
-  </script>
-  
 </head>
 <body>
-  <h1 id="qunit-header">QUnit example</h1>
- <h2 id="qunit-banner"></h2>
- <div id="qunit-testrunner-toolbar"></div>
- <h2 id="qunit-userAgent"></h2>
- <ol id="qunit-tests"></ol>
- <div id="qunit-fixture">test markup, will be hidden</div>
+	<h1 id="qunit-header">QUnit example</h1>
+	<h2 id="qunit-banner"></h2>
+	<div id="qunit-testrunner-toolbar"></div>
+	<h2 id="qunit-userAgent"></h2>
+	<ol id="qunit-tests"></ol>
+	<div id="qunit-fixture">test markup, will be hidden</div>
 </body>
 </html>
