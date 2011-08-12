@@ -9,41 +9,95 @@
 
 <script>
 	Game = function() {
-		this.fields = Array(9, false);
+		this.fields = Array(false, false, false, false, false, false, false, false, false);
 	}
 	Game.prototype = {
 		take : function(field) {
 			this.fields[field-1] = true;
+			return true;
 		},
 		isFinished : function() {
 			var all = this.fields.every(function (field){
-				return field ;
+				return field;
 			});
-
-			var line = this.fields[0] && this.fields[1] && this.fields[2];
 			
-			var colonne = this.fields[0] && this.fields[3] && this.fields[6]; 
-				
-			return all || line || colonne;
+			var line = this._checkCombinations([[0, 1, 2], [3, 4, 5], [6, 7, 8]]);
+			var colonne = this._checkCombinations([[0, 3, 6], [1, 4, 7], [2, 5, 8]]);
+			var diagonale = this._checkCombinations([[0, 4, 8], [2, 4, 6]]);
+			
+			return all || line || colonne || diagonale;
 		},
 		currentPlayer : function() {
 			return "X";
+		},
+		_checkCombination: function (i1, i2, i3) {
+			return this.fields[i1] && this.fields[i2] && this.fields[i3];
+		},
+		_checkCombinations: function (combinations) {
+			for (var i = 0; i < combinations.length; i++) {
+				if(this._checkCombination.apply(this, combinations[i])) {
+					return true;
+				}
+			}
+			
+			return false;
 		}
 	}
 
 	$(document)
 			.ready(
 					function() {
+						module("5. Case non vide");
+						test(
+								"",
+								function() {
+									"Une case non vide ne peut pas être prise."
+									game = new Game();
+									ok(game.take(1));
+									ok(!game.take(1));
+								});
+						module("4. Diagonales");
+						test(
+								"Le jeu est fini lorsque je prends une diagonale",
+								function() {
+									game = new Game();
+									game.take(1);
+									game.take(5);
+									game.take(9);
+									ok(game.isFinished(),
+									"quand je prends la premiere diagonale, le jeu est fini.");
+									
+									game = new Game();
+									game.take(3);
+									game.take(5);
+									game.take(7);
+									ok(game.isFinished(),
+									"quand je prends la deuxieme diagonale, le jeu est fini.");
+								});
 						module("3. Colonne");
 						test(
-								"Le jeu est fini si 3 cases en colonne sont prises",
+								"Le jeu est fini lorsqu'une colonne est prise",
 								function() {
 									game = new Game();
 									game.take(1);
 									game.take(4);
 									game.take(7);
 									ok(game.isFinished(),
-									"quand je prends 3 cases en colonne alignées, le jeu est fini.");
+									"quand je prends la premiere colonne, le jeu est fini.");
+									
+									game = new Game();
+									game.take(2);
+									game.take(5);
+									game.take(8);
+									ok(game.isFinished(),
+									"quand je prends la deuxieme colonne, le jeu est fini.");
+									
+									game = new Game();
+									game.take(3);
+									game.take(6);
+									game.take(9);
+									ok(game.isFinished(),
+									"quand je prends la 3eme colonne, le jeu est fini.");
 								});
 						module("2. Ligne");
 						test(
@@ -70,7 +124,21 @@
 									game.take(2);
 									game.take(3);
 									ok(game.isFinished(),
-									"quand je prends 3 cases en ligne, le jeu est fini.");
+									"quand je prends la première ligne, le jeu est fini.");
+									
+									game = new Game();
+									game.take(4);
+									game.take(5);
+									game.take(6);
+									ok(game.isFinished(),
+									"quand je prends la deuxième ligne, le jeu est fini.");
+									
+									game = new Game();
+									game.take(7);
+									game.take(8);
+									game.take(9);
+									ok(game.isFinished(),
+									"quand je prends la troisième ligne, le jeu est fini.");
 								});
 						module("1. Fin");
 						test(
