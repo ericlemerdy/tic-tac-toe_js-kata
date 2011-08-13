@@ -24,6 +24,7 @@
 				this.switchPlayers();
 				this.isOver();
 			}
+			return this;
 		}
 		this.switchPlayers = function() {
 			if ("X" == this.getCurrentPlayer()) {
@@ -104,15 +105,13 @@
 		test("A non-blank field can't be taken",
 				function() {
 					expect(1);
-					game.take(1);
-					game.take("O", 1);
+					game.take(1).take("O", 1);
 					equals("X", $("#1").text(),
 							"Field 1 should have been taken by X.");
 				});
 		test("The game can be reset", function() {
 			expect(3);
-			game.take(1);
-			game.reset();
+			game.take(1).reset();
 			equals(".", $("#1").text(), "Field 1 should have been reset.");
 			equals(0, $("#message").text().length,
 					"Message should have been reset.");
@@ -121,15 +120,7 @@
 		});
 		test("The game is over when all fields are taken", function() {
 			expect(1);
-			game.take(1);
-			game.take(3);
-			game.take(2);
-			game.take(4);
-			game.take(6);
-			game.take(5);
-			game.take(7);
-			game.take(8);
-			game.take(9);
+			game.take(1).take(3).take(2).take(4).take(6).take(5).take(7).take(8).take(9);
 			equals($("#message").text(), "Game over",
 					"The game should be over when all fields are taken.");
 		});
@@ -144,92 +135,56 @@
 		test("The game is won by O if the first line is taken by O.",
 				function() {
 					expect(1);
-					game.take(9);
-					game.take(1);
-					game.take(5);
-					game.take(2);
-					game.take(7);
-					game.take(3);
+					game.take(9).take(1).take(5).take(2).take(7).take(3);
 					equals("O won", $("#message").text(),
 							"The game should be won by player O.");
 				});
 		test("The game is won by X if the second line is taken by X.",
 				function() {
 					expect(1);
-					game.take(4);
-					game.take(1);
-					game.take(5);
-					game.take(2);
-					game.take(6);
+					game.take(4).take(1).take(5).take(2).take(6);
 					equals("X won", $("#message").text(),
 							"The game should be won by player X.");
 				});
 		test("The game is won by O if the third line is taken by O.",
 				function() {
 					expect(1);
-					game.take(1);
-					game.take(7);
-					game.take(5);
-					game.take(8);
-					game.take(3);
-					game.take(9);
+					game.take(1).take(7).take(5).take(8).take(3).take(9);
 					equals("O won", $("#message").text(),
 							"The game should be won by player O.");
 				});
 		test("The game is won by X if the first column is taken by X.",
 				function() {
 					expect(1);
-					game.take(1);
-					game.take(2);
-					game.take(4);
-					game.take(5);
-					game.take(7);
+					game.take(1).take(2).take(4).take(5).take(7);
 					equals("X won", $("#message").text(),
 							"The game should be won by player X.");
 				});
 		test("The game is won by O if the second column is taken by O.",
 				function() {
 					expect(1);
-					game.take(1);
-					game.take(2);
-					game.take(4);
-					game.take(5);
-					game.take(9);
-					game.take(8);
+					game.take(1).take(2).take(4).take(5).take(9).take(8);
 					equals("O won", $("#message").text(),
 							"The game should be won by player O.");
 				});
 		test("The game is won by X if the third column is taken by X.",
 				function() {
 					expect(1);
-					game.take(3);
-					game.take(2);
-					game.take(6);
-					game.take(5);
-					game.take(9);
+					game.take(3).take(2).take(6).take(5).take(9);
 					equals("X won", $("#message").text(),
 							"The game should be won by player X.");
 				});
 		test("The game is won by X if first diagonal is taken by X.",
 				function() {
 					expect(1);
-					game.take(1);
-					game.take(2);
-					game.take(5);
-					game.take(3);
-					game.take(9);
+					game.take(1).take(2).take(5).take(3).take(9);
 					equals("X won", $("#message").text(),
 							"The game should be won by player X.");
 				});
 		test("The game is won by O if second diagonal is taken by O.",
 				function() {
 					expect(1);
-					game.take(1);
-					game.take(3);
-					game.take(4);
-					game.take(5);
-					game.take(9);
-					game.take(7);
+					game.take(1).take(3).take(4).take(5).take(9).take(7);
 					equals("O won", $("#message").text(),
 							"The game should be won by player O.");
 				});
