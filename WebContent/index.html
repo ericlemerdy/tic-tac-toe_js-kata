@@ -33,31 +33,21 @@
 				this.setCurrentPlayer("X");
 			}
 		}
+		this.threeFieldsTakenByTheSamePlayer = function(field1, field2, field3) {
+			return $(field1).text() != "." && $(field1).text() == $(field2).text() && $(field2).text() == $(field3).text();
+		}
 		this.isOver = function() {
-			firstLineTaken = $("#1").text() != "."
-					&& $("#1").text() == $("#2").text()
-					&& $("#2").text() == $("#3").text();
-			secondLineTaken = $("#4").text() != "."
-					&& $("#4").text() == $("#5").text()
-					&& $("#5").text() == $("#6").text();
-			thirdLineTaken = $("#7").text() != "."
-					&& $("#7").text() == $("#8").text()
-					&& $("#8").text() == $("#9").text();
-			firstColumnTaken = $("#1").text() != "."
-					&& $("#1").text() == $("#4").text()
-					&& $("#4").text() == $("#7").text();
-			secondColumnTaken = $("#2").text() != "."
-					&& $("#2").text() == $("#5").text()
-					&& $("#5").text() == $("#8").text();
-			thirdColumnTaken = $("#3").text() != "."
-					&& $("#3").text() == $("#6").text()
-					&& $("#6").text() == $("#9").text();
-			diagonalOneTaken = $("#1").text() != "."
-					&& $("#1").text() == $("#5").text()
-					&& $("#5").text() == $("#9").text();
-			diagonalTwoTaken = $("#3").text() != "."
-					&& $("#3").text() == $("#5").text()
-					&& $("#5").text() == $("#7").text();
+			firstLineTaken = this.threeFieldsTakenByTheSamePlayer("#1", "#2", "#3");
+			secondLineTaken = this.threeFieldsTakenByTheSamePlayer("#4", "#5", "#6");
+			thirdLineTaken = this.threeFieldsTakenByTheSamePlayer("#7", "#8", "#9");
+
+			firstColumnTaken = this.threeFieldsTakenByTheSamePlayer("#1", "#4", "#7");
+			secondColumnTaken = this.threeFieldsTakenByTheSamePlayer("#2", "#5", "#8");
+			thirdColumnTaken = this.threeFieldsTakenByTheSamePlayer("#3", "#6", "#9");
+			
+			diagonalOneTaken = this.threeFieldsTakenByTheSamePlayer("#1", "#5", "#9");
+			diagonalTwoTaken = this.threeFieldsTakenByTheSamePlayer("#3", "#5", "#7");
+			
 			if (firstLineTaken || secondLineTaken || thirdLineTaken
 					|| firstColumnTaken || secondColumnTaken
 					|| thirdColumnTaken || diagonalOneTaken || diagonalTwoTaken) {
