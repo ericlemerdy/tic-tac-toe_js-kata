@@ -9,51 +9,56 @@
 
 <script>
 	var Game = function() {
-		this.currentPlayerId = "currentPlayer";
+		this.getFieldValue = function(field) {
+			return $('#' + field).text();
+		}
 		this.getCurrentPlayer = function() {
-			return $("#" + this.currentPlayerId).text();
+			return $("#currentPlayer").text();
 		}
-		this.setCurrentPlayer = function(playerMark) {
-			$("#" + this.currentPlayerId).text(playerMark);
+		this._setCurrentPlayer = function(playerMark) {
+			$("#currentPlayer").text(playerMark);
 		}
-		this.setMessage = function(message) {
+		this._getMessage = function() {
+			return $("#message").text();
+		}
+		this._setMessage = function(message) {
 			$("#message").text(message);
 		}
 		this.take = function(field) {
 			if ($("#message").text() == "" && $("#" + field).text() == ".") {
 				$("#" + field).text(this.getCurrentPlayer());
-				this.switchPlayers();
+				this._switchPlayers();
 				this.isOver();
 			}
 			return this;
 		}
-		this.switchPlayers = function() {
+		this._switchPlayers = function() {
 			if ("X" == this.getCurrentPlayer()) {
-				this.setCurrentPlayer("O");
+				this._setCurrentPlayer("O");
 			} else {
-				this.setCurrentPlayer("X");
+				this._setCurrentPlayer("X");
 			}
 		}
-		this.threeFieldsTakenByTheSamePlayer = function(field1, field2, field3) {
-			return $(field1).text() != "." && $(field1).text() == $(field2).text()
-					&& $(field2).text() == $(field3).text();
+		this._threeFieldsTakenByTheSamePlayer = function(field1, field2, field3) {
+			return $("#" + field1).text() != "." && $("#" + field1).text() == $("#" + field2).text()
+					&& $("#" + field2).text() == $("#" + field3).text();
 		}
 		this.isOver = function() {
-			firstLineTaken = this.threeFieldsTakenByTheSamePlayer("#1", "#2", "#3");
-			secondLineTaken = this.threeFieldsTakenByTheSamePlayer("#4", "#5", "#6");
-			thirdLineTaken = this.threeFieldsTakenByTheSamePlayer("#7", "#8", "#9");
+			firstLineTaken = this._threeFieldsTakenByTheSamePlayer(1, 2, 3);
+			secondLineTaken = this._threeFieldsTakenByTheSamePlayer(4, 5, 6);
+			thirdLineTaken = this._threeFieldsTakenByTheSamePlayer(7, 8, 9);
 
-			firstColumnTaken = this.threeFieldsTakenByTheSamePlayer("#1", "#4", "#7");
-			secondColumnTaken = this.threeFieldsTakenByTheSamePlayer("#2", "#5", "#8");
-			thirdColumnTaken = this.threeFieldsTakenByTheSamePlayer("#3", "#6", "#9");
+			firstColumnTaken = this._threeFieldsTakenByTheSamePlayer(1, 4, 7);
+			secondColumnTaken = this._threeFieldsTakenByTheSamePlayer(2, 5, 8);
+			thirdColumnTaken = this._threeFieldsTakenByTheSamePlayer(3, 6, 9);
 
-			diagonalOneTaken = this.threeFieldsTakenByTheSamePlayer("#1", "#5", "#9");
-			diagonalTwoTaken = this.threeFieldsTakenByTheSamePlayer("#3", "#5", "#7");
+			diagonalOneTaken = this._threeFieldsTakenByTheSamePlayer(1, 5, 9);
+			diagonalTwoTaken = this._threeFieldsTakenByTheSamePlayer(3, 5, 7);
 
 			if (firstLineTaken || secondLineTaken || thirdLineTaken || firstColumnTaken || secondColumnTaken
 					|| thirdColumnTaken || diagonalOneTaken || diagonalTwoTaken) {
-				this.switchPlayers();
-				this.setMessage(this.getCurrentPlayer() + " won");
+				this._switchPlayers();
+				this._setMessage(this.getCurrentPlayer() + " won");
 				return;
 			}
 			var allFieldsAreTaken = true;
@@ -61,15 +66,27 @@
 				allFieldsAreTaken = allFieldsAreTaken && ($(this).text() != ".");
 			});
 			if (allFieldsAreTaken) {
-				this.setMessage("Game over");
+				this._setMessage("Game over");
 			}
 		}
 		this.reset = function() {
 			$("#grid td").each(function() {
 				$(this).text(".");
 			});
-			this.setCurrentPlayer("X");
-			this.setMessage("");
+			this._setCurrentPlayer("X");
+			this._setMessage("");
+		}
+		this.isGameOver = function() {
+			return "Game over" == this._getMessage();
+		}
+		this.getWinner = function() {
+			if ($("#message").text() == "X won") {
+				return "X";
+			}
+			if ($("#message").text() == "O won") {
+				return "O";
+			}
+			return null;
 		}
 	}
 	prod = function() {
@@ -89,70 +106,71 @@
 		test("A field can be taken", function() {
 			expect(1);
 			game.take(1);
-			equals("X", $("#1").text(), "Field 1 should have been taken.");
+			equals(game.getFieldValue(1), "X", "Field 1 should have been taken by X.");
 		});
 		test("A non-blank field can't be taken", function() {
 			expect(1);
-			game.take(1).take("O", 1);
-			equals("X", $("#1").text(), "Field 1 should have been taken by X.");
+			game.take(1).take(1);
+			equals(game.getFieldValue(1), "X", "Field 1 should have been taken by X.");
 		});
 		test("The game can be reset", function() {
-			expect(3);
+			expect(4);
 			game.take(1).reset();
-			equals(".", $("#1").text(), "Field 1 should have been reset.");
-			equals(0, $("#message").text().length, "Message should have been reset.");
-			equals("X", $("#currentPlayer").text(), "Current player should have been reset.");
+			equals(game.getFieldValue(1), ".", "Field 1 should have been reset.");
+			ok(!game.isGameOver(), "The game should not be over");
+			equals(null, game.getWinner(), "The game should not have a winner.");
+			equals(game.getCurrentPlayer(), "X", "Current player should have been reset.");
 		});
 		test("The game is over when all fields are taken", function() {
 			expect(1);
 			game.take(1).take(3).take(2).take(4).take(6).take(5).take(7).take(8).take(9);
-			equals($("#message").text(), "Game over", "The game should be over when all fields are taken.");
+			ok(game.isGameOver(), "The game should be over when all fields are taken.");
 		});
 		test("Players are taking fields alternatively", function() {
 			expect(2);
-			equals("X", $("#currentPlayer").text(), "Initially, the current player is X.");
+			equals(game.getCurrentPlayer(), "X", "Initially, the current player is X.");
 			game.take(1);
-			equals("O", $("#currentPlayer").text(), "The current player should now be O.");
+			equals(game.getCurrentPlayer(), "O", "The current player should now be O.");
 		});
 		test("The game is won by O if the first line is taken by O.", function() {
 			expect(1);
 			game.take(9).take(1).take(5).take(2).take(7).take(3);
-			equals("O won", $("#message").text(), "The game should be won by player O.");
+			equals(game.getWinner(), "O", "The game should be won by player O.");
 		});
 		test("The game is won by X if the second line is taken by X.", function() {
 			expect(1);
 			game.take(4).take(1).take(5).take(2).take(6);
-			equals("X won", $("#message").text(), "The game should be won by player X.");
+			equals(game.getWinner(), "X", "The game should be won by player X.");
 		});
 		test("The game is won by O if the third line is taken by O.", function() {
 			expect(1);
 			game.take(1).take(7).take(5).take(8).take(3).take(9);
-			equals("O won", $("#message").text(), "The game should be won by player O.");
+			equals(game.getWinner(), "O", "The game should be won by player O.");
 		});
 		test("The game is won by X if the first column is taken by X.", function() {
 			expect(1);
 			game.take(1).take(2).take(4).take(5).take(7);
-			equals("X won", $("#message").text(), "The game should be won by player X.");
+			equals(game.getWinner(), "X", "The game should be won by player X.");
 		});
 		test("The game is won by O if the second column is taken by O.", function() {
 			expect(1);
 			game.take(1).take(2).take(4).take(5).take(9).take(8);
-			equals("O won", $("#message").text(), "The game should be won by player O.");
+			equals(game.getWinner(), "O", "The game should be won by player O.");
 		});
 		test("The game is won by X if the third column is taken by X.", function() {
 			expect(1);
 			game.take(3).take(2).take(6).take(5).take(9);
-			equals("X won", $("#message").text(), "The game should be won by player X.");
+			equals(game.getWinner(), "X", "The game should be won by player X.");
 		});
 		test("The game is won by X if first diagonal is taken by X.", function() {
 			expect(1);
 			game.take(1).take(2).take(5).take(3).take(9);
-			equals("X won", $("#message").text(), "The game should be won by player X.");
+			equals(game.getWinner(), "X", "The game should be won by player X.");
 		});
 		test("The game is won by O if second diagonal is taken by O.", function() {
 			expect(1);
 			game.take(1).take(3).take(4).take(5).take(9).take(7);
-			equals("O won", $("#message").text(), "The game should be won by player O.");
+			equals(game.getWinner(), "O", "The game should be won by player O.");
 		});
 	}
 	$(document).ready(prod);
