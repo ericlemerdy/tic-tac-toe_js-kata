@@ -2,180 +2,201 @@
                     "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-<script src="offline/jquery-latest.js"></script>
 <link rel="stylesheet" href="offline/qunit.css" type="text/css"
 	media="screen" />
+<script type="text/javascript" src="offline/jquery-latest.js"></script>
 <script type="text/javascript" src="offline/qunit.js"></script>
+<script type="text/javascript" src="offline/backbone/underscore.js"></script>
+<script type="text/javascript" src="offline/backbone/backbone.js"></script>
 
 <script>
-	var Game = function() {
-		this.getFieldValue = function(field) {
-			return $('#' + field).text();
-		}
-		this.getCurrentPlayer = function() {
-			return $("#currentPlayer").text();
-		}
-		this._setCurrentPlayer = function(playerMark) {
-			$("#currentPlayer").text(playerMark);
-		}
-		this._getMessage = function() {
-			return $("#message").text();
-		}
-		this._setMessage = function(message) {
-			$("#message").text(message);
-		}
-		this.take = function(field) {
-			if ($("#message").text() == "" && $("#" + field).text() == ".") {
-				$("#" + field).text(this.getCurrentPlayer());
+	Game = Backbone.Model.extend({
+		initialize: function() {
+			this.set({
+				"fields": new Array(".",".",".",".",".",".",".",".","."),
+				"currentPlayer": "X",
+				"winner": null,
+				"isGameOver": false
+			});
+		},
+		take: function(field) {
+			if (!this.get("isGameOver") &&
+					this.get("fields")[field-1] == ".") {
+				var fields_array = this.get("fields");
+				fields_array.splice(field - 1, 1, this.get("currentPlayer"));
+				this.set({ fields: fields_array });
 				this._switchPlayers();
 				this.isOver();
 			}
 			return this;
-		}
-		this._switchPlayers = function() {
-			if ("X" == this.getCurrentPlayer()) {
-				this._setCurrentPlayer("O");
+		},
+		_switchPlayers: function() {
+			if ("X" == this.get("currentPlayer")) {
+				this.set({currentPlayer: "O"});
 			} else {
-				this._setCurrentPlayer("X");
+				this.set({currentPlayer: "X"});
 			}
-		}
-		this._threeFieldsTakenByTheSamePlayer = function(field1, field2, field3) {
-			return $("#" + field1).text() != "." && $("#" + field1).text() == $("#" + field2).text()
-					&& $("#" + field2).text() == $("#" + field3).text();
-		}
-		this.isOver = function() {
-			firstLineTaken = this._threeFieldsTakenByTheSamePlayer(1, 2, 3);
-			secondLineTaken = this._threeFieldsTakenByTheSamePlayer(4, 5, 6);
-			thirdLineTaken = this._threeFieldsTakenByTheSamePlayer(7, 8, 9);
+		},
+		_threeFieldsTakenByTheSamePlayer: function(field1, field2, field3) {
+			return this.get("fields")[field1 - 1] != "." &&
+				this.get("fields")[field1 - 1] == this.get("fields")[field2 - 1] &&
+				this.get("fields")[field2 - 1] == this.get("fields")[field3 - 1];
+		},
+		isOver: function() {
+			var firstLineTaken = this._threeFieldsTakenByTheSamePlayer(1, 2, 3);
+			var secondLineTaken = this._threeFieldsTakenByTheSamePlayer(4, 5, 6);
+			var thirdLineTaken = this._threeFieldsTakenByTheSamePlayer(7, 8, 9);
 
-			firstColumnTaken = this._threeFieldsTakenByTheSamePlayer(1, 4, 7);
-			secondColumnTaken = this._threeFieldsTakenByTheSamePlayer(2, 5, 8);
-			thirdColumnTaken = this._threeFieldsTakenByTheSamePlayer(3, 6, 9);
+			var firstColumnTaken = this._threeFieldsTakenByTheSamePlayer(1, 4, 7);
+			var secondColumnTaken = this._threeFieldsTakenByTheSamePlayer(2, 5, 8);
+			var thirdColumnTaken = this._threeFieldsTakenByTheSamePlayer(3, 6, 9);
 
-			diagonalOneTaken = this._threeFieldsTakenByTheSamePlayer(1, 5, 9);
-			diagonalTwoTaken = this._threeFieldsTakenByTheSamePlayer(3, 5, 7);
+			var diagonalOneTaken = this._threeFieldsTakenByTheSamePlayer(1, 5, 9);
+			var diagonalTwoTaken = this._threeFieldsTakenByTheSamePlayer(3, 5, 7);
 
 			if (firstLineTaken || secondLineTaken || thirdLineTaken || firstColumnTaken || secondColumnTaken
 					|| thirdColumnTaken || diagonalOneTaken || diagonalTwoTaken) {
 				this._switchPlayers();
-				this._setMessage(this.getCurrentPlayer() + " won");
+				this.set({ winner: this.get("currentPlayer") });
+				this.set({ message: this.get("winner") + " won" });
 				return;
 			}
 			var allFieldsAreTaken = true;
-			$("#grid td").each(function() {
-				allFieldsAreTaken = allFieldsAreTaken && ($(this).text() != ".");
+			$.each(this.get("fields"), function(index, value) {
+				allFieldsAreTaken = allFieldsAreTaken && (value != ".");
 			});
 			if (allFieldsAreTaken) {
-				this._setMessage("Game over");
+				this.set( { isGameOver: true } );
 			}
 		}
-		this.reset = function() {
-			$("#grid td").each(function() {
-				$(this).text(".");
-			});
-			this._setCurrentPlayer("X");
-			this._setMessage("");
-		}
-		this.isGameOver = function() {
-			return "Game over" == this._getMessage();
-		}
-		this.getWinner = function() {
-			if ($("#message").text() == "X won") {
-				return "X";
-			}
-			if ($("#message").text() == "O won") {
-				return "O";
-			}
-			return null;
-		}
-	}
-	prod = function() {
-		game = new Game("currentPlayer");
-		$("#grid td").each(function() {
-			$(this).click(function() {
-				game.take($(this).attr("id"));
-			});
-		});
-	}
-	tests = function() {
+	});
+	
+    tests = function() {
 		module("With reset the grid", {
 			setup : function() {
-				game.reset();
+				game = new Game();
 			}
 		});
 		test("A field can be taken", function() {
 			expect(1);
 			game.take(1);
-			equals(game.getFieldValue(1), "X", "Field 1 should have been taken by X.");
+			equals(game.get("fields")[0], "X", "Field 1 should have been taken by X.");
 		});
 		test("A non-blank field can't be taken", function() {
 			expect(1);
 			game.take(1).take(1);
-			equals(game.getFieldValue(1), "X", "Field 1 should have been taken by X.");
+			equals(game.get("fields")[0], "X", "Field 1 should have been taken by X.");
 		});
-		test("The game can be reset", function() {
+		test("The game instance is not a singleton", function() {
 			expect(4);
-			game.take(1).reset();
-			equals(game.getFieldValue(1), ".", "Field 1 should have been reset.");
-			ok(!game.isGameOver(), "The game should not be over");
-			equals(null, game.getWinner(), "The game should not have a winner.");
-			equals(game.getCurrentPlayer(), "X", "Current player should have been reset.");
+			game.take(1);
+			game = new Game();
+			equals(game.get("fields")[0], ".", "Field 1 should have been restored to default.");
+			ok(!game.get("isGameOver"), "The game should not be over");
+			equals(null, game.get("winner"), "The game should not have a winner.");
+			equals(game.get("currentPlayer"), "X", "Current player should have been restored to default.");
 		});
 		test("The game is over when all fields are taken", function() {
 			expect(1);
 			game.take(1).take(3).take(2).take(4).take(6).take(5).take(7).take(8).take(9);
-			ok(game.isGameOver(), "The game should be over when all fields are taken.");
+			ok(game.get("isGameOver"), "The game should be over when all fields are taken.");
 		});
 		test("Players are taking fields alternatively", function() {
 			expect(2);
-			equals(game.getCurrentPlayer(), "X", "Initially, the current player is X.");
+			equals(game.get("currentPlayer"), "X", "Initially, the current player is X.");
 			game.take(1);
-			equals(game.getCurrentPlayer(), "O", "The current player should now be O.");
+			equals(game.get("currentPlayer"), "O", "The current player should now be O.");
 		});
 		test("The game is won by O if the first line is taken by O.", function() {
 			expect(1);
 			game.take(9).take(1).take(5).take(2).take(7).take(3);
-			equals(game.getWinner(), "O", "The game should be won by player O.");
+			equals(game.get("winner"), "O", "The game should be won by player O.");
 		});
 		test("The game is won by X if the second line is taken by X.", function() {
 			expect(1);
 			game.take(4).take(1).take(5).take(2).take(6);
-			equals(game.getWinner(), "X", "The game should be won by player X.");
+			equals(game.get("winner"), "X", "The game should be won by player X.");
 		});
 		test("The game is won by O if the third line is taken by O.", function() {
 			expect(1);
 			game.take(1).take(7).take(5).take(8).take(3).take(9);
-			equals(game.getWinner(), "O", "The game should be won by player O.");
+			equals(game.get("winner"), "O", "The game should be won by player O.");
 		});
 		test("The game is won by X if the first column is taken by X.", function() {
 			expect(1);
 			game.take(1).take(2).take(4).take(5).take(7);
-			equals(game.getWinner(), "X", "The game should be won by player X.");
+			equals(game.get("winner"), "X", "The game should be won by player X.");
 		});
 		test("The game is won by O if the second column is taken by O.", function() {
 			expect(1);
 			game.take(1).take(2).take(4).take(5).take(9).take(8);
-			equals(game.getWinner(), "O", "The game should be won by player O.");
+			equals(game.get("winner"), "O", "The game should be won by player O.");
 		});
 		test("The game is won by X if the third column is taken by X.", function() {
 			expect(1);
 			game.take(3).take(2).take(6).take(5).take(9);
-			equals(game.getWinner(), "X", "The game should be won by player X.");
+			equals(game.get("winner"), "X", "The game should be won by player X.");
 		});
 		test("The game is won by X if first diagonal is taken by X.", function() {
 			expect(1);
 			game.take(1).take(2).take(5).take(3).take(9);
-			equals(game.getWinner(), "X", "The game should be won by player X.");
+			equals(game.get("winner"), "X", "The game should be won by player X.");
 		});
 		test("The game is won by O if second diagonal is taken by O.", function() {
 			expect(1);
 			game.take(1).take(3).take(4).take(5).take(9).take(7);
-			equals(game.getWinner(), "O", "The game should be won by player O.");
+			equals(game.get("winner"), "O", "The game should be won by player O.");
 		});
 	}
-	$(document).ready(prod);
+	
+    GameView = Backbone.View.extend({
+        initialize: function(){
+            this.render();
+        },
+    	render: function () {
+			var template = _.template($("#gameTemplate").html(), {});
+			this.el.html(template);
+		},
+		events: {
+			"click .grid>td": "take"
+		},
+		take: function(event) {
+			game.take(event.currentTarget.id);
+		}
+    });
+
 	$(document).ready(tests);
+    $(document).ready(function (){
+    	new GameView({ el: $("#game") });
+    });
 </script>
+<style type="text/template" id="gameTemplate">
+	<p>
+		Current Player: <span id="currentPlayer">X</span>
+	</p>
+	<p>The grid:</p>
+	<div id="grid">
+		<table>
+			<tr>
+				<td id="1">.</td>
+				<td id="2">.</td>
+				<td id="3">.</td>
+			</tr>
+			<tr>
+				<td id="4">.</td>
+				<td id="5">.</td>
+				<td id="6">.</td>
+			</tr>
+			<tr>
+				<td id="7">.</td>
+				<td id="8">.</td>
+				<td id="9">.</td>
+			</tr>
+		</table>
+	</div>
+	<p id="message"></p>
+	<button id="resetButton" onclick="game.reset()">reset</button>
+</style>
 <style>
 #grid td {
 	width: 1em;
@@ -186,33 +207,7 @@
 </style>
 </head>
 <body>
-	<div id="info">
-		<p>
-			Current Player: <span id="currentPlayer">X</span>
-		</p>
-		<p>The grid:</p>
-		<div id="grid">
-			<table>
-				<tr>
-					<td id="1">.</td>
-					<td id="2">.</td>
-					<td id="3">.</td>
-				</tr>
-				<tr>
-					<td id="4">.</td>
-					<td id="5">.</td>
-					<td id="6">.</td>
-				</tr>
-				<tr>
-					<td id="7">.</td>
-					<td id="8">.</td>
-					<td id="9">.</td>
-				</tr>
-			</table>
-		</div>
-		<p id="message"></p>
-		<button id="resetButton" onclick="game.reset()">reset</button>
-	</div>
+	<div id="game"></div>
 	<h1 id="qunit-header">QUnit example</h1>
 	<h2 id="qunit-banner"></h2>
 	<div id="qunit-testrunner-toolbar"></div>
