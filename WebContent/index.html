@@ -10,13 +10,18 @@
 <script>
 	Game = function() {
 		this.fields = Array(false, false, false, false, false, false, false, false, false);
+		this._currentPlayer = "X";
 	}
 	Game.prototype = {
-		take : function(field) {
+		take: function(field) {
+			if (this.fields[field-1]) {
+				return this._currentPlayer;
+			}
 			this.fields[field-1] = true;
-			return true;
+			this._currentPlayer = (this._currentPlayer == "X" ? "O" : "X");
+			return this._currentPlayer;
 		},
-		isFinished : function() {
+		isFinished: function() {
 			var all = this.fields.every(function (field){
 				return field;
 			});
@@ -27,8 +32,8 @@
 			
 			return all || line || colonne || diagonale;
 		},
-		currentPlayer : function() {
-			return "X";
+		currentPlayer: function() {
+			return this._currentPlayer;
 		},
 		_checkCombination: function (i1, i2, i3) {
 			return this.fields[i1] && this.fields[i2] && this.fields[i3];
@@ -41,12 +46,38 @@
 			}
 			
 			return false;
+		},
+		winner: function () {
+			return "X";
 		}
 	}
 
 	$(document)
 			.ready(
 					function() {
+						module("6. Les joueurs jouent alternativement jusqu'à ce que le jeu termine ou qu'un joueur gagne.");
+						test(
+								"Les joueurs jouent alternativement.",
+								function() {
+									game = new Game();
+									equals(game.take(1), "O");
+									equals(game.currentPlayer(), "O", "Le joueur a du changer normalement.");
+									equals(game.take(2), "X");
+									equals(game.currentPlayer(), "X", "Le joueur a du re-changer normalement.");
+								}
+						);
+						test(
+								"Le jeu peut être gagné.",
+								function() {
+									game = new Game();
+									equals(game.take(1), "O");
+									equals(game.take(2), "X");
+									equals(game.take(5), "O");
+									equals(game.take(3), "X");
+									equals(game.take(9), "O");
+									equals(game.winner(), "X", "Le gagnant est X.");
+								}
+						);
 						module("5. Case non vide");
 						test(
 								"",
