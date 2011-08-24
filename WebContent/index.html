@@ -9,34 +9,40 @@
 
 <script>
 	Game = function() {
-		this.fields = Array(false, false, false, false, false, false, false, false, false);
+		this.fields = Array(".", ".", ".", ".", ".", ".", ".", ".", ".");
 		this._currentPlayer = "X";
 	}
 	Game.prototype = {
 		take: function(field) {
-			if (this.fields[field-1]) {
+			if (this.fields[field-1] != ".") {
 				return this._currentPlayer;
 			}
-			this.fields[field-1] = true;
+			this.fields[field-1] = this._currentPlayer;
 			this._currentPlayer = (this._currentPlayer == "X" ? "O" : "X");
 			return this._currentPlayer;
 		},
-		isFinished: function() {
-			var all = this.fields.every(function (field){
-				return field;
-			});
-			
+		isWon: function() {
 			var line = this._checkCombinations([[0, 1, 2], [3, 4, 5], [6, 7, 8]]);
 			var colonne = this._checkCombinations([[0, 3, 6], [1, 4, 7], [2, 5, 8]]);
 			var diagonale = this._checkCombinations([[0, 4, 8], [2, 4, 6]]);
 			
-			return all || line || colonne || diagonale;
+			return line || colonne || diagonale;
+		},
+		isFinished: function() {
+			var all = this.fields.every(function (field){
+				return field != ".";
+			});
+			return all;
 		},
 		currentPlayer: function() {
 			return this._currentPlayer;
 		},
 		_checkCombination: function (i1, i2, i3) {
-			return this.fields[i1] && this.fields[i2] && this.fields[i3];
+			console.log(i1, i2, i3);
+			var fieldNotEmpty = this.fields[i1] != ".";
+			var fieldOneIsFieldTwo = this.fields[i1] == this.fields[i2];
+			var fieldTwoIsFieldThree = this.fields[i2] == this.fields[i3];
+			return fieldNotEmpty && fieldOneIsFieldTwo && fieldTwoIsFieldThree;
 		},
 		_checkCombinations: function (combinations) {
 			for (var i = 0; i < combinations.length; i++) {
@@ -48,7 +54,10 @@
 			return false;
 		},
 		winner: function () {
-			return "X";
+			if (this.isWon()) {
+				return this._currentPlayer == "X" ? "O" : "X";
+			}
+			return null;
 		}
 	}
 
@@ -67,7 +76,7 @@
 								}
 						);
 						test(
-								"Le jeu peut être gagné.",
+								"Le jeu peut être gagné par X.",
 								function() {
 									game = new Game();
 									equals(game.take(1), "O");
@@ -78,68 +87,93 @@
 									equals(game.winner(), "X", "Le gagnant est X.");
 								}
 						);
+						test(
+								"Le jeu peut être gagné par O.",
+								function() {
+									game = new Game();
+									equals(game.take(4), "O");
+									equals(game.take(1), "X");
+									equals(game.take(2), "O");
+									equals(game.take(5), "X");
+									equals(game.take(3), "O");
+									equals(game.take(9), "X");
+									equals(game.winner(), "O", "Le gagnant est O.");
+								}
+						);
 						module("5. Case non vide");
 						test(
 								"",
 								function() {
 									"Une case non vide ne peut pas être prise."
 									game = new Game();
-									ok(game.take(1));
-									ok(!game.take(1));
+									equals(game.take(1), "O");
+									equals(game.take(1), "O");
 								});
 						module("4. Diagonales");
 						test(
-								"Le jeu est fini lorsque je prends une diagonale",
+								"Le jeu est gagné lorsque X prends une diagonale",
 								function() {
 									game = new Game();
 									game.take(1);
+									game.take(2);
 									game.take(5);
+									game.take(3);
 									game.take(9);
-									ok(game.isFinished(),
-									"quand je prends la premiere diagonale, le jeu est fini.");
+									ok(game.isWon(),
+									"quand X prends la premiere diagonale, le jeu est gagné.");
 									
 									game = new Game();
 									game.take(3);
+									game.take(1);
 									game.take(5);
+									game.take(2);
 									game.take(7);
-									ok(game.isFinished(),
-									"quand je prends la deuxieme diagonale, le jeu est fini.");
+									ok(game.isWon(),
+									"quand X prends la deuxieme diagonale, le jeu est gagné.");
 								});
 						module("3. Colonne");
 						test(
-								"Le jeu est fini lorsqu'une colonne est prise",
+								"Le jeu est gagné lorsqu'une colonne est prise",
 								function() {
 									game = new Game();
 									game.take(1);
+									game.take(2);
 									game.take(4);
+									game.take(3);
 									game.take(7);
-									ok(game.isFinished(),
-									"quand je prends la premiere colonne, le jeu est fini.");
+									ok(game.isWon(),
+									"quand X prends la premiere colonne, le jeu est gagné.");
 									
 									game = new Game();
 									game.take(2);
-									game.take(5);
-									game.take(8);
-									ok(game.isFinished(),
-									"quand je prends la deuxieme colonne, le jeu est fini.");
-									
-									game = new Game();
-									game.take(3);
-									game.take(6);
-									game.take(9);
-									ok(game.isFinished(),
-									"quand je prends la 3eme colonne, le jeu est fini.");
-								});
-						module("2. Ligne");
-						test(
-								"Le jeu n'est pas fini si 3 cases non alignées sont prises",
-								function() {
-									game = new Game();
 									game.take(1);
 									game.take(5);
 									game.take(3);
-									ok(!game.isFinished(),
-									"quand je prends 3 cases non alignées, le jeu n'est pas fini.");
+									game.take(8);
+									ok(game.isWon(),
+									"quand X prends la deuxieme colonne, le jeu est gagné.");
+									
+									game = new Game();
+									game.take(3);
+									game.take(1);
+									game.take(6);
+									game.take(2);
+									game.take(9);
+									ok(game.isWon(),
+									"quand X prends la 3eme colonne, le jeu est gagné.");
+								});
+						module("2. Ligne");
+						test(
+								"Le jeu n'est pas gagné si 3 cases non alignées sont prises",
+								function() {
+									game = new Game();
+									game.take(1);
+									game.take(2);
+									game.take(5);
+									game.take(3);
+									game.take(7);
+									ok(!game.isWon(),
+									"quand X prends 3 cases non alignées, le jeu n'est pas gagné.");
 								});
 						test(
 								"Le jeu fait jouer un joueur.",
@@ -152,56 +186,66 @@
 								function() {
 									game = new Game();
 									game.take(1);
+									game.take(4);
 									game.take(2);
+									game.take(5);
 									game.take(3);
-									ok(game.isFinished(),
-									"quand je prends la première ligne, le jeu est fini.");
+									ok(game.isWon(),
+									"quand X prends la première ligne, le jeu est fini.");
 									
 									game = new Game();
 									game.take(4);
+									game.take(1);
 									game.take(5);
+									game.take(2);
 									game.take(6);
-									ok(game.isFinished(),
-									"quand je prends la deuxième ligne, le jeu est fini.");
+									ok(game.isWon(),
+									"quand X prends la deuxième ligne, le jeu est fini.");
 									
 									game = new Game();
 									game.take(7);
+									game.take(1);
 									game.take(8);
+									game.take(2);
 									game.take(9);
-									ok(game.isFinished(),
-									"quand je prends la troisième ligne, le jeu est fini.");
+									ok(game.isWon(),
+									"quand X prends la troisième ligne, le jeu est fini.");
 								});
 						module("1. Fin");
 						test(
 								"Le jeu est terminé si toutes les cases sont prises",
 								function() {
 									game = new Game();
-									game.take(1);
-									game.take(2);
-									game.take(3);
-									game.take(4);
-									game.take(5);
-									game.take(6);
-									game.take(7);
-									game.take(8);
-									game.take(9);
-									ok(game.isFinished(),
-											"quand je prends toutes les cases, ça doit être fini.");
+									// XOX XOX
+									// XOO XOX
+									// XOX OXO
+									game.take(1); // X
+									game.take(2); // O
+									game.take(3); // X
+									game.take(5); // O
+									game.take(4); // X
+									game.take(7); // O
+									game.take(6); // X
+									game.take(9); // O
+									game.take(8); // X
+									ok(game.isFinished());
+									ok(!game.isWon(),
+											"quand toutes les cases sont prises par des joueurs, ça doit être une égalité.");
 								});
 						test(
 								"Le jeu n'est pas terminé si aucune case n'est prise",
 								function() {
 									game = new Game();
-									ok(!game.isFinished(),
-											"quand je prends aucune case, ça doit pas être fini.");
+									ok(!game.isWon(),
+											"quand X prends aucune case, ça doit pas être fini.");
 								});
 						test(
 								"Le jeu n'est pas terminé si 1 case est prise",
 								function() {
 									game = new Game();
 									game.take(3);
-									ok(!game.isFinished(),
-											"quand je prends une case, ça doit pas être fini.");
+									ok(!game.isWon(),
+											"quand X prends une case, ça doit pas être fini.");
 								});
 
 					});
