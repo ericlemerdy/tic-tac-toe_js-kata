@@ -2,47 +2,118 @@
                     "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-  <script src="offline/jquery-latest.js"></script>
-  <link rel="stylesheet" href="offline/qunit.css" type="text/css" media="screen" />
+<script src="offline/jquery-latest.js"></script>
+<link rel="stylesheet" href="offline/qunit.css" type="text/css"
+	media="screen" />
 <script type="text/javascript" src="offline/qunit.js"></script>
 
-  <script>
-  $(document).ready(function(){
-    
-test("a basic test example", function() {
-  ok( true, "this test is fine" );
-  var value = "hello";
-  equal( value, "hello", "We expect value to be hello" );
-});
+<script>
+	/*
+	 * Règles:
+	 * - Le Tic-tac-toe se joue sur une grille carrée de 3x3 cases.
+	 * - Deux joueurs s'affrontent.
+	 * - Ils doivent remplir chacun à leur tour une case de la grille avec le symbole qui leur
+	 *   est attribué : O ou X.
+	 * - Le gagnant est celui qui arrive à aligner trois symboles identiques, horizontalement,
+	 *   verticalement ou en diagonale.
+	 */
+	$(document).ready(function() {
+		var Grille = function() {
+			this.grid = Array(Array(".", ".", "."), Array(".", ".", "."), Array(".", ".", "."));
+			this.height = function() {
+				return 3;
+			}
+			this.width = function() {
+				return 3;
+			}
+			this.isFree = function(x, y) {
+				return this.grid[x-1][y-1] === ".";
+			}
+			this.markPlayer = function(x, y, mark) {
+				this.grid[x-1][y-1] = mark;
+			}
+			this.win = function() {
+				for (i=0; i < this.grid.length; i++) {
+					row = this.grid[i];
+					if (row.join("") === "XXX" || row.join("") === "OOO") {
+						return true;
+					}
+				}
+				return false;
+			}
+		};
+		var Jeu = function() {
+			this.nbJoueur = 2;
+			this.joueur = 'X';
+			this.grille = new Grille();
+			this.joue = function(x, y) {
+				if (this.grille.isFree(x, y)) {
+					this.grille.markPlayer(x, y, this.joueur);
+					isFini = this.grille.win();
+					if (!isFini) {
+						if (this.joueur === 'X')
+							this.joueur = 'O';
+						else this.joueur = 'X';
+					}
+					return isFini;
+				}
+			}
+		};
 
-module("Module A");
+		test("Le gagnant est celui qui arrive à aligner trois symboles identiques verticalement", function() {
+			jeu = new Jeu();
+			equal(jeu.joue(1, 1), false);
+			equal(jeu.joue(1, 2), false);
+			equal(jeu.joue(2, 1), false);
+			equal(jeu.joue(1, 3), false);
+			equal(jeu.joue(3, 1), true);
+			equal(jeu.joueur, "X");
+		});
+		
+		test("Le gagnant est celui qui arrive à aligner trois symboles identiques horizontalement", function() {
+			jeu = new Jeu();
+			equal(jeu.joue(1, 1), false);
+			equal(jeu.joue(2, 1), false);
+			equal(jeu.joue(1, 2), false);
+			equal(jeu.joue(3, 1), false);
+			equal(jeu.joue(1, 3), true);
+			equal(jeu.joueur, "X");
+		});
+		
+		test("Ils jouent chacun à leur tour une case de la grille avec O ou X", function() {
+			jeu = new Jeu();
+			jeu.joue(1, 1);
+			equal(jeu.joueur, "O");
+			jeu.joue(1, 1);
+			equal(jeu.joueur, "O");
+		});
+		test("Les joueurs jouent chacun leur tour", function() {
+			jeu = new Jeu();
+			equal(jeu.joueur, "X");
+			jeu.joue(1, 1);
+			equal(jeu.joueur, "O");
+			jeu.joue(1, 2);
+			equal(jeu.joueur, "X");
+		});
+		test("Deux joueurs s'affrontent.", function() {
+			jeu = new Jeu();
+			equal(jeu.nbJoueur, 2);
+		});
+		test("Le Tic-tac-toe se joue sur une grille carrée de 3x3 cases.", function() {
+			grille = new Grille();
+			equal(grille.height(), 3);
+			equal(grille.width(), 3);
+		});
+	});
+</script>
 
-test("first test within module", function() {
-  ok( true, "all pass" );
-});
-
-test("second test within module", function() {
-  ok( true, "all pass" );
-});
-
-module("Module B");
-
-test("some other test", function() {
-  expect(2);
-  equal( true, false, "failing test" );
-  equal( true, true, "passing test" );
-});
-
-  });
-  </script>
-  
 </head>
 <body>
-  <h1 id="qunit-header">QUnit example</h1>
- <h2 id="qunit-banner"></h2>
- <div id="qunit-testrunner-toolbar"></div>
- <h2 id="qunit-userAgent"></h2>
- <ol id="qunit-tests"></ol>
- <div id="qunit-fixture">test markup, will be hidden</div>
+	<h1 id="qunit-header">QUnit example</h1>
+	<h2 id="qunit-banner"></h2>
+	<div id="qunit-testrunner-toolbar"></div>
+	<h2 id="qunit-userAgent"></h2>
+	<ol id="qunit-tests"></ol>
+	<div id="qunit-fixture">test markup, will be hidden</div>
 </body>
 </html>

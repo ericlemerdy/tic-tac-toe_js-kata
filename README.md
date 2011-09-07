@@ -2,9 +2,7 @@
 
 ## Règles
 
-1. Le jeu est terminé si toutes les cases sont prises
-1. Le jeu est gagné par un joueur si toutes les cases d'une ligne sont prises par ce joueur
-1. Le jeu est gagné par un joueur si toutes les cases d'une colonne sont prises par ce joueur
-1. Le jeu est gagné par un joueur si toutes les cases d'une diagonale sont prises par ce joueur.
-1. Une case non vide ne peut pas être prise par un joueur
-1. Les joueurs jouent alternativement jusqu'à ce que le jeu termine ou qu'un joueur gagne.
+1. Le Tic-tac-toe se joue sur une grille carrée de 3x3 cases.
+1. Deux joueurs s'affrontent.
+1. Ils doivent remplir chacun à leur tour une case de la grille avec le symbole qui leur est attribué : O ou X.
+1. Le gagnant est celui qui arrive à aligner trois symboles identiques, horizontalement, verticalement ou en diagonale.
